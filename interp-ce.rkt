@@ -7,7 +7,7 @@
 ;; students (groups of three) and submit the same code as them. Use
 ;; that code to begin your solution for p3.
 
-;; Name: ________________________________
+;; Name: Christine Hung
 ;; Collaborator 1: ________________________________
 ;; Collaborator 2: ________________________________
 (provide interp-ce)
@@ -22,18 +22,28 @@
     (match exp
       [(or (? number?) (? boolean?)) exp]
       [`(let ([,xs ,rhss] ...) ,body)
-       'todo]
+       (interp (hash-set env x (interp env rhs)) body)]
       [`(lambda ,args ,body)
-       'todo]
+       `(closure (lambda (,arg) ,body) ,env)]
       [(? symbol? x)
-       'todo]
+       (hash-ref env x (lambda () `(error "Undefined variable: " ,x)))]
       [`(if ,ge ,te ,fe)
-       'todo]
+       (let ((ge-result (interp env ge)))
+        (if (eq? ge-result #f)
+          (interp env fe)
+          (interp env te)))]
       ;; not required, but you may want to add this
       [`(apply-prim ,op ,x)
-       'todo]
+       (apply (get-primitive-function op) (map (lambda (arg) (interp env arg)) args))]
       [`(,ef ,eargs ...)
-       'todo]))
+       (let* ((func-result (interp env f))
+              (arg-values (map (lambda (arg) (interp env arg)) args)))
+         (if (and (list? func-result) (eq? (car func-result) 'closure))
+             (let ((closure-func (cadr func-result))
+                   (closure-env (caddr func-result)))
+               (apply closure-func arg-values))
+             (apply func-result arg-values)))]))
+  (define (get-primitive-function op)
   ;; TODO: update?
   (define starting-env (hash))
   (interp starting-env exp))
